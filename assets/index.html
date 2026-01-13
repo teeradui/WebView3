@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+</head>
+<body>
+    <h1>My Crat <p id="total">Total: \$120</p></h1>
+    <button style="padding: 16px 32px; font-size: 20px; width: 100%;" onclick="sendTotalFlutter()">Send Total to Flutter</button>
+
+    <script>
+        function sendTotalFlutter() {
+            var totalPrice = document.getElementById('total').innerText;
+            FlutterChannel.postMessage(totalPrice);
+        }
+    </script>
+</body>
+</html>
