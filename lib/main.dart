@@ -11,9 +11,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(colorScheme: .fromSeed(seedColor: Colors.deepPurple)),
-      home: const MyHomePage(title: 'Webview 3'),
+      title: 'My Cart',
+      theme: ThemeData(colorScheme: .fromSeed(seedColor: const Color.fromARGB(255, 208, 180, 255))),
+      home: const MyHomePage(title: 'Webview JS'),
     );
   }
 }
@@ -52,20 +52,47 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-
+        backgroundColor: const Color.fromARGB(255, 245, 191, 255),
+        centerTitle: true,
         title: Text(widget.title),
       ),
       body: Column(
         children: [
           Expanded(child: WebViewWidget(controller: _controller)),
+
           Container(
             width: double.infinity,
             color: Colors.grey[200],
             padding: const EdgeInsets.all(16),
-            child: Text(
-              'Total from JS: $totalFromJs',
-              style: const TextStyle(fontSize: 20),
+            child: Column(
+              children: [
+                Text(
+                  'Received from JS: $totalFromJs',
+                  style: const TextStyle(fontSize: 20),
+                ),
+
+                const SizedBox(height: 12),
+
+                ElevatedButton(
+                  onPressed: () {
+                    if (totalFromJs.isEmpty) return;
+
+                    final numberOnly = totalFromJs.replaceAll(
+                      RegExp(r'[^0-9]'),
+                      '',
+                    );
+
+                    final total = int.parse(numberOnly);
+
+                    final newTotal = total + 100;
+
+                    _controller.runJavaScript(
+                      'updateTotalFromFlutter($newTotal);',
+                    );
+                  },
+                  child: const Text('Add 100 from Flutter'),
+                ),
+              ],
             ),
           ),
         ],
@@ -75,21 +102,109 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 const String htmlContent = '''<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping Cart</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Cart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+    }
+    h1 {
+      margin-top: 2px;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      border: 1px solid #ddd;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #dcdcdc;
+      color: #2196F3;
+      border: none;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight:bold;
+    }
+    .cart {
+      margin-top: 20px;
+    }
+  </style>
 </head>
-<body>
-    <h1>My Crat <p id="total">Total: \$120</p></h1>
-    <button style="padding: 16px 32px; font-size: 20px; width: 100%;" onclick="sendTotalFlutter()">Send Total to Flutter</button>
 
-    <script>
-        function sendTotalFlutter() {
-            var totalPrice = document.getElementById('total').innerText;
-            FlutterChannel.postMessage(totalPrice);
-        }
-    </script>
+<body>
+
+<h1>My Cart</h1>
+
+<div class="item">
+  <span>Apple - \$30</span>
+  <button onclick="addItem(30)">Add</button>
+</div>
+
+<div class="item">
+  <span>Banana - \$20</span>
+  <button onclick="addItem(20)">Add</button>
+</div>
+
+<div class="item">
+  <span>Orange - \$25</span>
+  <button onclick="addItem(25)">Add</button>
+</div>
+
+<div class="item">
+  <span>Milk - \$45</span>
+  <button onclick="addItem(45)">Add</button>
+</div>
+
+<div class="item">
+  <span>Bread - \$35</span>
+  <button onclick="addItem(35)">Add</button>
+</div>
+
+<div class="cart">
+  <h2>Cart</h2>
+  <p id="total">Total: \$0</p>
+</div>
+
+<script>
+  var total = 0;
+
+  function addItem(price) {
+    total += price;
+    updateUI();
+    sendTotalToFlutter();
+  }
+
+  function updateUI() {
+    document.getElementById('total').innerText = "Total: \$" + total;
+  }
+
+  function sendTotalToFlutter() {
+    FlutterChannel.postMessage(total.toString());
+  }
+
+  function updateTotalFromFlutter(newTotal) {
+    total = newTotal;
+    updateUI();
+    sendTotalToFlutter();
+  }
+
+  function sendTotalToFlutter() {
+  FlutterChannel.postMessage(total.toString());
+}
+
+window.onload = function () {
+  sendTotalToFlutter();
+};
+
+  </script>
 </body>
 </html> ''';
